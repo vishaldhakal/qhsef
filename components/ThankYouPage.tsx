@@ -68,10 +68,10 @@ const ThankYouPage = ({
             transition={{ delay: 0.3 }}
             className="space-y-4"
           >
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Thank You!
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base sm:text-lg">
               Your submission has been received successfully.
             </p>
           </motion.div>

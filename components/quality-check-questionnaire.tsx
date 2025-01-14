@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { StepIndicator } from "@/components/ui/step-indicator";
+import ThankYouPage from "@/components/ThankYouPage";
+import { Loader2 } from "lucide-react";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 const QualityCheckQuestionnaire = () => {
   const [steps, setSteps] = useState<any[]>([]);
@@ -9,8 +14,19 @@ const QualityCheckQuestionnaire = () => {
   const [stepApplicable, setStepApplicable] = useState<{
     [key: number]: boolean;
   }>({});
-  const [selected, setSelected] = useState<"yes" | "no" | null>(null);
+
+  const router = useRouter();
+  const [selected, setSelected] = useState<{
+    [key: number]: "yes" | "no" | null;
+  }>({});
   const [error, setError] = useState<string | null>(null);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const totalSteps = steps.length;
+  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -29,7 +45,7 @@ const QualityCheckQuestionnaire = () => {
   }, []);
 
   const handleAnswer = (questionId: string, value: boolean) => {
-    if (selected === "yes") {
+    if (selected[currentStep] === "yes") {
       setAnswers((prev) => ({
         ...prev,
         [questionId]: value,
@@ -37,16 +53,9 @@ const QualityCheckQuestionnaire = () => {
     }
   };
 
-  const handleStepApplicable = (stepId: number, value: boolean) => {
-    setStepApplicable((prev) => ({
-      ...prev,
-      [stepId]: value,
-    }));
-  };
-
   const canProceed = () => {
     const currentQuestions = steps[currentStep]?.questions || [];
-    if (selected === "yes") {
+    if (selected[currentStep] === "yes") {
       const allAnswered = currentQuestions.every(
         (q: { id: number }) => answers[q.id] !== undefined
       );
@@ -56,7 +65,7 @@ const QualityCheckQuestionnaire = () => {
   };
 
   const handleNext = () => {
-    if (selected === "yes" && !canProceed()) {
+    if (selected[currentStep] === "yes" && !canProceed()) {
       setError("Please answer all questions before proceeding.");
     } else {
       setError(null);
@@ -73,12 +82,21 @@ const QualityCheckQuestionnaire = () => {
   };
 
   const handleFinish = async () => {
-    const payload = {
-      answers: Object.entries(answers).map(([questionId, value]) => ({
-        questionId,
-        value,
-      })),
-    };
+    setLoading(true);
+    const payload = steps.map((step, index) => {
+      const answersArray = step.questions.map(
+        (question: { id: number; text: string }) => ({
+          question_id: question.id,
+          answer: answers[question.id] || false, // Default to false if not answered
+        })
+      );
+
+      return {
+        requirement_id: step.id, // Assuming each step has a unique ID
+        is_relevant: selected[index] === "yes", // Set based on the user's selection
+        answers: answersArray.length > 0 ? answersArray : undefined, // Include answers only if there are any
+      };
+    });
 
     try {
       const response = await fetch(
@@ -97,10 +115,22 @@ const QualityCheckQuestionnaire = () => {
       }
 
       const data = await response.json();
-      console.log("Data submitted successfully:", data);
+      setTotalPoints(data.total_points);
+      setEarnedPoints(data.earned_points);
+      setShowThankYou(true);
     } catch (error) {
       console.error("Error submitting data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleClosePopup = () => {
+    setShowThankYou(false);
+  };
+
+  const handleSelection = (stepId: number, value: "yes" | "no") => {
+    setSelected((prev) => ({ ...prev, [stepId]: value }));
   };
 
   return (
@@ -126,13 +156,22 @@ const QualityCheckQuestionnaire = () => {
       {/* Right Content Area */}
       <div className="w-full max-w-3xl mx-auto p-6  bg-white  rounded-lg px-10">
         <div className="flex justify-between items-center mb-6 mt-5">
-          <span className="text-2xl font-semibold text-blue-800">
-            {steps[currentStep]?.name || "Loading..."}
-          </span>
-
-          <span className="text-gray-500">
-            {currentStep + 1} / {steps.length}
-          </span>
+          <div className="flex items-center mb-4">
+            <h2 className="text-3xl text-blue-800 font-bold">
+              {steps[currentStep]?.name}
+            </h2>
+            {loading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+          </div>
+          <div className="ml-4" style={{ width: "80px", height: "80px" }}>
+            <CircularProgressbar
+              value={progressPercentage}
+              text={`${currentStep + 1}/${totalSteps}`}
+              styles={{
+                path: { stroke: `#3b82f6` },
+                text: { fill: "#3b82f6", fontSize: "20px" },
+              }}
+            />
+          </div>
         </div>
         <div className="space-y-4 mb-5">
           <div className="text-gray-500 text-lg font-medium mb-4">
@@ -141,9 +180,11 @@ const QualityCheckQuestionnaire = () => {
           <div className="flex space-x-4">
             {/* Yes Button */}
             <button
-              onClick={() => setSelected("yes")}
+              onClick={() => handleSelection(currentStep, "yes")}
               className={`flex items-center justify-center w-1/2 p-4 border-2 rounded-xl shadow hover:shadow-lg transition-all duration-200 ${
-                selected === "yes" ? "border-green-500" : "border-gray-300"
+                selected[currentStep] === "yes"
+                  ? "border-green-500"
+                  : "border-gray-300"
               }`}
             >
               <div className="flex items-center">
@@ -151,7 +192,9 @@ const QualityCheckQuestionnaire = () => {
                 <img src="/yes.svg" alt="Yes" className="h-12 w-12 mr-2" />
                 <span
                   className={`font-medium ${
-                    selected === "yes" ? "text-green-500" : "text-gray-800"
+                    selected[currentStep] === "yes"
+                      ? "text-green-500"
+                      : "text-gray-800"
                   }`}
                 >
                   Yes, it is Applicable
@@ -161,9 +204,11 @@ const QualityCheckQuestionnaire = () => {
 
             {/* No Button */}
             <button
-              onClick={() => setSelected("no")}
+              onClick={() => handleSelection(currentStep, "no")}
               className={`flex items-center justify-center w-1/2 p-4 py-7 border-2 rounded-xl shadow hover:shadow-lg transition-all duration-200 ${
-                selected === "no" ? "border-red-500" : "border-gray-300"
+                selected[currentStep] === "no"
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             >
               <div className="flex items-center">
@@ -171,7 +216,9 @@ const QualityCheckQuestionnaire = () => {
                 <img src="/no.svg" alt="No" className="h-12 w-12 mr-2" />
                 <span
                   className={`font-medium ${
-                    selected === "no" ? "text-red-500" : "text-gray-800"
+                    selected[currentStep] === "no"
+                      ? "text-red-500"
+                      : "text-gray-800"
                   }`}
                 >
                   No, it is not Applicable
@@ -183,10 +230,13 @@ const QualityCheckQuestionnaire = () => {
         </div>
         <div className="space-y-6">
           {steps[currentStep]?.questions.map(
-            (question: { id: number; text: string }, index: number) => (
-              <div key={question.id} className="p-4 rounded-lg">
-                <p className="text-gray-700 mb-4">
-                  {index + 1}. {question.text}
+            (
+              question: { id: number; text: string; points: Float32Array },
+              index: number
+            ) => (
+              <div key={question.id} className=" rounded-lg">
+                <p className="text-gray-700 mb-4 flex justify-between">
+                  {index + 1}. {question.text} <p>[ 1 * {question.points} ]</p>
                 </p>
                 <div className="">
                   <button
@@ -196,7 +246,7 @@ const QualityCheckQuestionnaire = () => {
                         ? "bg-green-500 text-white"
                         : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-green-100"
                     }`}
-                    disabled={selected === "no"}
+                    disabled={selected[currentStep] === "no"}
                   >
                     Yes
                   </button>
@@ -207,7 +257,7 @@ const QualityCheckQuestionnaire = () => {
                         ? "bg-red-500 text-white"
                         : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-red-100"
                     }`}
-                    disabled={selected === "no"}
+                    disabled={selected[currentStep] === "no"}
                   >
                     No
                   </button>
@@ -242,6 +292,15 @@ const QualityCheckQuestionnaire = () => {
           </button>
         </div>
       </div>
+
+      {/* Show Thank You Popup */}
+      {showThankYou && (
+        <ThankYouPage
+          totalPoints={totalPoints}
+          earnedPoints={earnedPoints}
+          onClose={handleClosePopup}
+        />
+      )}
     </div>
   );
 };

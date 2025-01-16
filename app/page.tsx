@@ -1,10 +1,9 @@
-import Image from "next/image";
-import QualityCheckQuestionnaire from "@/components/quality-check-questionnaire";
+import LandingPage from "./landingPage/page";
 
 export default function Home() {
   return (
     <>
-      <QualityCheckQuestionnaire />
+      <LandingPage />
     </>
   );
 }

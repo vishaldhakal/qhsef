@@ -7,6 +7,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import useRouter from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -25,6 +26,7 @@ const QualityCheckQuestionnaire = () => {
   const [error, setError] = useState<string | null>(null);
   const [showThankYou, setShowThankYou] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
+  const[file_url, setFileUrl] = useState("");
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isQuestionVisible, setIsQuestionVisible] = useState(true); // Added state for question visibility
@@ -120,7 +122,7 @@ const QualityCheckQuestionnaire = () => {
   };
 
   const handleFinish = async () => {
-    setShowPopup(true); // Show the popup when Finish is clicked
+    setShowPopup(true); // Show the popup when the user finishes the questionnaire
   };
 
   const handleSubmitDetails = async () => {
@@ -163,7 +165,9 @@ const QualityCheckQuestionnaire = () => {
 
       const data = await response.json(); // Get the response data
       setTotalPoints(data.total_points); // Set total points
-      setEarnedPoints(data.earned_points); // Set earned points
+      setEarnedPoints(data.earned_points);
+      setFileUrl(data.file_url);
+       // Set earned points
       setShowThankYou(true); // Show Thank You page after successful submission
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -474,6 +478,7 @@ const QualityCheckQuestionnaire = () => {
         <ThankYouPage
           totalPoints={totalPoints}
           earnedPoints={earnedPoints}
+          file_url={file_url}
           onClose={handleClosePopup}
         />
       )}

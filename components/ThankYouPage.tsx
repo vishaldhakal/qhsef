@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, CheckCircle, Award } from "lucide-react";
+import { Sparkles, CheckCircle, Award, Download } from "lucide-react"; // Import the Download icon
 import { Button } from "@/components/ui/button"; // Ensure this path is correct
 import confetti from "canvas-confetti";
 
 const ThankYouPage = ({
   totalPoints,
   earnedPoints,
+  file_url,
   onClose,
 }: {
   totalPoints: number;
   earnedPoints: number;
+  file_url: string; // File URL for download
   onClose: () => void; // Function to close the popup
 }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -125,6 +127,21 @@ const ThankYouPage = ({
               }}
             >
               Back to Home
+            </Button>
+          </motion.div>
+
+          {/* File Download Button */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center justify-center w-full mt-6"
+          >
+            <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:opacity-90 transition-all">
+              <Download className="w-5 h-5" /> {/* Download Icon */}
+              <a href={file_url} download>
+                Download File
+              </a>
             </Button>
           </motion.div>
         </div>

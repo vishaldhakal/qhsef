@@ -62,13 +62,6 @@ const About = () => {
                   Management Pvt. Ltd.
                 </p>
 
-                <p className="text-lg leading-relaxed text-gray-700 text-justify">
-                  Q-HSEF is a voluntary certification system that will help
-                  local industries improve their practices, ensuring compliance
-                  with established standards in social, environmental, and
-                  worker welfare, health, and safety.
-                </p>
-
                 <div className="mt-8">
                   <div className="inline-block bg-blue-50 px-6 py-3 rounded-lg border border-blue-100">
                     <p className="text-blue-800 font-medium">

@@ -26,7 +26,7 @@ const QualityCheckQuestionnaire = () => {
   const [error, setError] = useState<string | null>(null);
   const [showThankYou, setShowThankYou] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
-  const[file_url, setFileUrl] = useState("");
+  const [file_url, setFileUrl] = useState("");
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isQuestionVisible, setIsQuestionVisible] = useState(true); // Added state for question visibility
@@ -167,7 +167,7 @@ const QualityCheckQuestionnaire = () => {
       setTotalPoints(data.total_points); // Set total points
       setEarnedPoints(data.earned_points);
       setFileUrl(data.file_url);
-       // Set earned points
+      // Set earned points
       setShowThankYou(true); // Show Thank You page after successful submission
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -323,10 +323,13 @@ const QualityCheckQuestionnaire = () => {
                       .map((question: any) => (
                         <div key={question.id} className="space-y-4">
                           <div className="flex flex-col sm:flex-row justify-center items-center sm:justify-between md:items-center sm:items-center mb-4">
-                            <p className="text-gray-800 font-medium text-sm sm:text-base mb-2 sm:mb-0">
+                            <p
+                              className="text-gray-800 font-medium text-sm sm:text-base mb-2 sm:mb-0"
+                              style={{ height: "50px" }}
+                            >
                               {question.text} ?
                             </p>
-                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full  items-center justify-center text-xs sm:text-sm">
+                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full items-center justify-center text-xs sm:text-sm">
                               {question.points} pts
                             </span>
                           </div>
@@ -372,12 +375,8 @@ const QualityCheckQuestionnaire = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePrevious}
-                disabled={currentStep === 0}
-                className={`w-full sm:w-auto sm:px-6 sm:py-3 px-4 py-2 rounded-xl font-medium transition-all ${
-                  currentStep === 0
-                    ? "bg-gray-100 text-gray-400"
-                    : "bg-white border-2 border-purple-200 text-purple-600 hover:bg-purple-50"
-                }`}
+                disabled={true}
+                className={`w-full sm:w-auto sm:px-6 sm:py-3 px-4 py-2 rounded-xl font-medium transition-all bg-gray-100 text-gray-400 cursor-not-allowed`}
               >
                 Previous
               </motion.button>

@@ -21,6 +21,7 @@ import { Send } from "lucide-react";
 const contactFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
+  phone_number: z.string().min(1, "Phone number is required"),
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
@@ -35,6 +36,7 @@ export function ContactForm() {
     defaultValues: {
       name: "",
       email: "",
+      phone_number: "",
       subject: "",
       message: "",
     },
@@ -43,13 +45,16 @@ export function ContactForm() {
   async function onSubmit(data: ContactFormValues) {
     setIsLoading(true);
     try {
-      await fetch("cim.baliyoventures.com/api/contact-form-submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      await fetch(
+        "https://cim.baliyoventures.com/api/koshi_quality_standard/contact-form-submit/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
       toast.success("Message sent successfully!");
       form.reset();
     } catch (error) {
@@ -70,11 +75,7 @@ export function ContactForm() {
               <FormItem>
                 <FormLabel className="text-gray-700">Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Your name"
-                    {...field}
-                    className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-                  />
+                  <Input placeholder="Your name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -90,7 +91,7 @@ export function ContactForm() {
                   <Input
                     placeholder="your@email.com"
                     {...field}
-                    className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    className="border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   />
                 </FormControl>
                 <FormMessage />
@@ -108,13 +109,28 @@ export function ContactForm() {
                 <Input
                   placeholder="Message subject"
                   {...field}
-                  className="bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                  className="border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="phone_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-700">Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="Your Phone number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="message"
@@ -124,7 +140,7 @@ export function ContactForm() {
               <FormControl>
                 <Textarea
                   placeholder="Your message"
-                  className="min-h-[120px] bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                  className="min-h-[120px] rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none transition-all"
                   {...field}
                 />
               </FormControl>
@@ -135,8 +151,8 @@ export function ContactForm() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg
-            transition-all duration-300 transform hover:translate-y-[-2px]"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg
+            transition-all duration-300 transform hover:translate-y-[-2px] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             "Sending..."

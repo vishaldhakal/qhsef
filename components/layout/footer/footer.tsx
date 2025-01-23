@@ -48,8 +48,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#apply" className="hover:text-gray-300">
-                  Apply for Logo
+                <Link href="/qhsef" className="hover:text-gray-300">
+                  Check Quality
                 </Link>
               </li>
             </ul>
@@ -58,27 +58,30 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Contact</h3>
             <ul className="space-y-2 text-sm">
-              <li>123 Main Street</li>
-              <li>Kathmandu, Nepal</li>
-              <li>Phone: +977 1234567</li>
-              <li>Email: info@mdmu.np</li>
+              <li>Chamber of Industries Morang, Biratnagar, Nepal</li>
+              <li>Phone: 021-515712</li>
+              <li>Email: biratexpo2024@gmail.com</li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <a href="#" className="hover:text-gray-300">
+              <a
+                href="https://www.facebook.com/BIRATEXPO2025"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gray-300"
+              >
                 <Facebook />
               </a>
-              <a href="#" className="hover:text-gray-300">
-                <Twitter />
-              </a>
-              <a href="#" className="hover:text-gray-300">
+              <a
+                href="https://www.instagram.com/biratexpo2025"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gray-300"
+              >
                 <Instagram />
-              </a>
-              <a href="#" className="hover:text-gray-300">
-                <Linkedin />
               </a>
             </div>
           </div>

@@ -6,19 +6,19 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Phone",
-    details: "+977-1-4444444",
+    details: "021-515712",
     color: "text-blue-600",
   },
   {
     icon: Mail,
     title: "Email",
-    details: "info@Qhsef.com",
+    details: "biratexpo2024@gmail.com",
     color: "text-emerald-600",
   },
   {
     icon: MapPin,
     title: "Location",
-    details: "Biratnagar, Nepal",
+    details: "Chamber of Industries Morang Biratnagar, Nepal",
     color: "text-red-600",
   },
   {
@@ -93,9 +93,7 @@ export const Contact = () => {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white p-8 rounded-xl shadow-sm">
-              <ContactForm />
-            </div>
+            <ContactForm />
           </div>
         </div>
       </div>

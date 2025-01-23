@@ -61,7 +61,7 @@ const Header = () => {
                       scrollToSection(item.href);
                     }}
                   >
-                    <NavigationMenuLink className="hover:text-[#2964f0] font-bold px-4 py-2">
+                    <NavigationMenuLink className="hover:text-[#2964f0]  px-4 py-2">
                       {item.label}
                     </NavigationMenuLink>
                   </Link>
@@ -69,7 +69,10 @@ const Header = () => {
               ))}
             </NavigationMenuList>
           </NavigationMenu>
-          <Button className="bg-white text-[#0A1E4B] hover:bg-gray-200" asChild>
+          <Button
+            className="bg-[#0A1E4B] hover:bg-[#0d255e] hover:text-white"
+            asChild
+          >
             <Link href={"/qhsef"}>Check Quality</Link>
           </Button>
         </div>

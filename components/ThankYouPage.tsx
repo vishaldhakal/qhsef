@@ -5,18 +5,18 @@ import { motion } from "framer-motion";
 import { Sparkles, CheckCircle, Award, Download } from "lucide-react"; // Import the Download icon
 import { Button } from "@/components/ui/button"; // Ensure this path is correct
 import confetti from "canvas-confetti";
+import { useRouter } from "next/navigation";
 
 const ThankYouPage = ({
   totalPoints,
   earnedPoints,
   file_url,
-  onClose,
 }: {
   totalPoints: number;
   earnedPoints: number;
   file_url: string; // File URL for download
-  onClose: () => void; // Function to close the popup
 }) => {
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
 
   const triggerConfetti = () => {
@@ -113,8 +113,7 @@ const ThankYouPage = ({
               variant="outline"
               className="flex-1 text-gray-600 hover:text-gray-700 border-2 hover:border-blue-200 transition-all"
               onClick={() => {
-                setIsVisible(false);
-                onClose(); // Call the onClose function to close the popup
+                router.push("/");
               }}
             >
               Close

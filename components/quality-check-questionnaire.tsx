@@ -380,46 +380,48 @@ const QualityCheckQuestionnaire = () => {
                       .slice(currentQuestionIndex, currentQuestionIndex + 1)
                       .map((question: any) => (
                         <div key={question.id} className="space-y-4">
-                          <div className="flex flex-col sm:flex-row justify-center items-center sm:justify-between md:items-center sm:items-center mb-4">
-                            <p
-                              className="text-gray-800 font-medium text-sm sm:text-base mb-2 sm:mb-0"
-                              style={{ height: "50px" }}
-                            >
-                              {question.text}
-                            </p>
-                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full items-center justify-center text-xs sm:text-sm">
-                              {question.points} pts
-                            </span>
-                          </div>
-                          <div className="flex gap-4">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                handleAnswer(question.id.toString(), true)
-                              }
-                              className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
-                                answers[question.id] === true
-                                  ? "bg-green-500 text-white"
-                                  : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-green-50"
-                              }`}
-                            >
-                              Yes
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                handleAnswer(question.id.toString(), false)
-                              }
-                              className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
-                                answers[question.id] === false
-                                  ? "bg-red-500 text-white"
-                                  : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-red-50"
-                              }`}
-                            >
-                              No
-                            </motion.button>
+                          <div className="flex flex-col gap-4 mb-6">
+                            {/* Question container with fixed height */}
+                            <div className="h-[200px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <p className="text-gray-800 font-medium text-sm sm:text-base flex-1">
+                                {question.text}
+                              </p>
+                              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
+                                {question.points} pts
+                              </span>
+                            </div>
+
+                            {/* Yes/No buttons in their own container */}
+                            <div className="flex gap-4 w-full">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  handleAnswer(question.id.toString(), true)
+                                }
+                                className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
+                                  answers[question.id] === true
+                                    ? "bg-green-500 text-white"
+                                    : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-green-50"
+                                }`}
+                              >
+                                Yes
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  handleAnswer(question.id.toString(), false)
+                                }
+                                className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
+                                  answers[question.id] === false
+                                    ? "bg-red-500 text-white"
+                                    : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-red-50"
+                                }`}
+                              >
+                                No
+                              </motion.button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -582,7 +584,6 @@ const QualityCheckQuestionnaire = () => {
           totalPoints={totalPoints}
           earnedPoints={earnedPoints}
           file_url={file_url}
-          onClose={handleClosePopup}
         />
       )}
 

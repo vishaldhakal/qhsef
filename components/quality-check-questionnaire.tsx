@@ -350,7 +350,7 @@ const QualityCheckQuestionnaire = () => {
                               className="text-gray-800 font-medium text-sm sm:text-base mb-2 sm:mb-0"
                               style={{ height: "50px" }}
                             >
-                              {question.text} ?
+                              {question.text}
                             </p>
                             <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full items-center justify-center text-xs sm:text-sm">
                               {question.points} pts

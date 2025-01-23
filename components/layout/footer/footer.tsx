@@ -49,7 +49,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/qhsef" className="hover:text-gray-300">
-                  Check Quality
+                  Self Assessment
                 </Link>
               </li>
             </ul>

@@ -41,7 +41,7 @@ export default function Hero() {
               className="bg-[#0b2a71] text-white hover:bg-blue-900 rounded-full p-4 sm:p-5 text-lg font-semibold"
               asChild
             >
-              <Link href={"/qhsef"}>Check Quality</Link>
+              <Link href={"/qhsef"}>Self Assessment</Link>
             </Button>
             <Button
               variant="outline"

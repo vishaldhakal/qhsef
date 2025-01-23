@@ -73,7 +73,7 @@ const Header = () => {
             className="bg-[#0A1E4B] hover:bg-[#0d255e] hover:text-white"
             asChild
           >
-            <Link href={"/qhsef"}>Check Quality</Link>
+            <Link href={"/qhsef"}>Self Assessment</Link>
           </Button>
         </div>
 
@@ -104,11 +104,11 @@ const Header = () => {
                 <Button
                   className="bg-white text-[#0A1E4B] hover:bg-gray-200 mx-4"
                   onClick={() => {
-                    scrollToSection("#apply");
+                    scrollToSection("/qhsef");
                     setOpen(false);
                   }}
                 >
-                  Apply for Logo
+                  Self Assessment
                 </Button>
               </div>
             </SheetContent>

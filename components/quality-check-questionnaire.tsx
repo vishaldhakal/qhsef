@@ -59,6 +59,10 @@ const QualityCheckQuestionnaire = () => {
 
   const [showPopup, setShowPopup] = useState(false); // State to manage popup visibility
 
+  // Add new state for confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showGeneratingAnimation, setShowGeneratingAnimation] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -89,14 +93,29 @@ const QualityCheckQuestionnaire = () => {
       ...prev,
       [questionId]: value,
     }));
-    if (currentQuestionIndex < steps[currentStep].questions.length - 1) {
+
+    // Check if this is the last question of the current step
+    const isLastQuestion =
+      currentQuestionIndex === steps[currentStep].questions.length - 1;
+    const isLastStep = currentStep === steps.length - 1;
+
+    if (isLastQuestion) {
+      if (isLastStep) {
+        // If it's the last question of the last step, show the modal after a brief delay
+        setTimeout(() => {
+          setShowPopup(true);
+        }, 500);
+      } else {
+        // If it's just the last question of the current step, move to next step
+        setTimeout(() => {
+          handleNext();
+        }, 300);
+      }
+    } else {
+      // If it's not the last question, move to next question
       setTimeout(() => {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-      }, 300); // 300ms delay to allow for exit animation
-    } else {
-      setTimeout(() => {
-        handleNext();
-      }, 300); // 300ms delay to allow for exit animation
+      }, 300);
     }
   };
 
@@ -153,8 +172,20 @@ const QualityCheckQuestionnaire = () => {
     setShowPopup(true); // Show the popup when the user finishes the questionnaire
   };
 
+  // Add reset function
+  const resetQuestionnaire = () => {
+    setAnswers({});
+    setSelected({});
+    setCurrentStep(0);
+    setCurrentQuestionIndex(0);
+    setShowPopup(false);
+    setIsQuestionVisible(true);
+    form.reset();
+  };
+
+  // Update handleSubmitDetails
   const handleSubmitDetails = async (values: z.infer<typeof formSchema>) => {
-    setLoading(true);
+    setShowGeneratingAnimation(true);
     const payload = {
       name: values.name,
       email: values.email,
@@ -191,11 +222,15 @@ const QualityCheckQuestionnaire = () => {
       setTotalPoints(data.total_points);
       setEarnedPoints(data.earned_points);
       setFileUrl(data.file_url);
-      setShowThankYou(true);
+
+      // Add delay to show animation
+      setTimeout(() => {
+        setShowGeneratingAnimation(false);
+        setShowThankYou(true);
+      }, 2000);
     } catch (error) {
       console.error("Error submitting data:", error);
-    } finally {
-      setLoading(false);
+      setShowGeneratingAnimation(false);
     }
   };
 
@@ -393,7 +428,7 @@ const QualityCheckQuestionnaire = () => {
               </AnimatePresence>
             </div>
 
-            <div className="flex flex-row sm:flex-row items-center justify-between pt-6 gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 gap-4">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -404,7 +439,8 @@ const QualityCheckQuestionnaire = () => {
                 Previous
               </motion.button>
 
-              <div className="w-16 h-16 sm:w-20 sm:h-20 sm:mt-4">
+              {/* Hide on mobile, show on desktop */}
+              <div className="hidden sm:block w-20 h-20">
                 <CircularProgressbar
                   value={progressPercentage}
                   text={`${currentStep + 1}/${totalSteps}`}
@@ -414,7 +450,7 @@ const QualityCheckQuestionnaire = () => {
                     })`,
                     textColor: "#6b21a8",
                     trailColor: "#f3e8ff",
-                    textSize: "24px",
+                    textSize: "22px",
                   })}
                 />
               </div>
@@ -422,10 +458,9 @@ const QualityCheckQuestionnaire = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleFinish}
                 disabled={
                   loading || currentStep !== steps.length - 1 || !canProceed()
-                } // Disable button if loading
+                }
                 className={`w-full sm:w-auto sm:px-6 sm:py-3 px-4 py-2 rounded-xl sm:font-medium font-sm transition-all ${
                   currentStep === steps.length - 1 && canProceed() && !loading
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-200"
@@ -434,6 +469,13 @@ const QualityCheckQuestionnaire = () => {
               >
                 Complete
               </motion.button>
+            </div>
+
+            {/* Show on mobile only */}
+            <div className="sm:hidden text-center mt-4">
+              <span className="text-lg font-medium text-purple-800">
+                {currentStep + 1}/{totalSteps}
+              </span>
             </div>
           </motion.div>
         </Card>
@@ -514,7 +556,7 @@ const QualityCheckQuestionnaire = () => {
                     type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowPopup(false)}
+                    onClick={() => setShowConfirmModal(true)}
                     className="w-full sm:w-1/2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all text-sm sm:text-base"
                   >
                     Cancel
@@ -542,6 +584,66 @@ const QualityCheckQuestionnaire = () => {
           file_url={file_url}
           onClose={handleClosePopup}
         />
+      )}
+
+      {/* Add JSX for confirmation modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm mx-auto"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Are you sure you want to cancel?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              All your progress will be lost and you&apos;ll need to start over.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all"
+              >
+                Keep Going
+              </button>
+              <button
+                onClick={() => {
+                  resetQuestionnaire();
+                  setShowConfirmModal(false);
+                }}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-all"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add JSX for generating animation */}
+      {showGeneratingAnimation && (
+        <div className="fixed inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center"
+          >
+            <div className="w-24 h-24 mb-6 mx-auto">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-full h-full border-4 border-purple-200 border-t-purple-600 rounded-full"
+              />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Generating Your Report
+            </h3>
+            <p className="text-gray-600">
+              Please wait while we analyze your responses...
+            </p>
+          </motion.div>
+        </div>
       )}
     </div>
   );

@@ -81,7 +81,7 @@ export const Contact = () => {
             <div className="bg-white p-4 rounded-xl shadow-sm">
               <div className="aspect-video w-full rounded-lg overflow-hidden">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3572.3040558171513!2d87.27111531502944!3d26.45591898332687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ef744704582d99%3A0x3ddedd6963ba5c82!2sBiratnagar%2C%20Nepal!5e0!3m2!1sen!2s!4v1647856687721!5m2!1sen!2s"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3571.6448900568325!2d87.2867593!3d26.467173300000002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ef74142c843179%3A0x9216f029e3d3b489!2sChamber%20of%20Industries%2C%20Morang!5e0!3m2!1sen!2snp!4v1737626215098!5m2!1sen!2snp"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

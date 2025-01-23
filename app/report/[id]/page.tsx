@@ -23,10 +23,7 @@ export const dynamicParams = true;
 
 async function fetchReportData(id: string): Promise<Report> {
   const response = await fetch(
-    `https://cim.baliyoventures.com/api/koshi_quality_standard/report/${id}/`,
-    {
-      next: { revalidate: 60 },
-    }
+    `https://cim.baliyoventures.com/api/koshi_quality_standard/report/${id}/`
   );
 
   if (!response.ok) {
@@ -221,9 +218,4 @@ export default async function ReportPage({
       </div>
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  // If you want to prerender some known report IDs
-  return [{ id: "72" }];
 }

@@ -14,52 +14,58 @@ import {
   BreadcrumbLink,
 } from "@/components/ui/breadcrumb";
 import Spinner from "@/components/ui/spinner";
-import {
-  Requirement,
-  RequirementsResponse,
-  RequirementsResponseSchema,
-  FormData,
-  FormDataSchema,
-} from "@/types/schema";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: "Name must be at least 2 characters" })
+    .max(50, { message: "Name must not exceed 50 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  phone: z.string().regex(/^\+?[\d\s-]{10,}$/, {
+    message: "Please enter a valid phone number (minimum 10 digits)",
+  }),
+});
 
 const QualityCheckQuestionnaire = () => {
-  const [steps, setSteps] = useState<Requirement[]>([]);
+  const [steps, setSteps] = useState<any[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, boolean>>({});
-  const [selected, setSelected] = useState<Record<number, "yes" | "no" | null>>(
-    {}
-  );
+  const [answers, setAnswers] = useState<{ [key: string]: boolean }>({});
+  const [selected, setSelected] = useState<{
+    [key: number]: "yes" | "no" | null;
+  }>({});
   const [error, setError] = useState<string | null>(null);
   const [showThankYou, setShowThankYou] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
   const [file_url, setFileUrl] = useState("");
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [isQuestionVisible, setIsQuestionVisible] = useState(true);
+  const [isQuestionVisible, setIsQuestionVisible] = useState(true); // Added state for question visibility
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const totalSteps = steps.length;
-  const progressPercentage = Math.round(
-    ((currentStep +
-      (currentQuestionIndex / steps[currentStep]?.questions.length || 0)) /
-      totalSteps) *
-      100
-  );
+  const progressPercentage = ((currentStep + 0) / totalSteps) * 100;
 
-  const [showPopup, setShowPopup] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [showPopup, setShowPopup] = useState(false); // State to manage popup visibility
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(FormDataSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+    },
   });
 
   useEffect(() => {
@@ -69,9 +75,7 @@ const QualityCheckQuestionnaire = () => {
           "https://cim.baliyoventures.com/api/koshi_quality_standard/requirements/"
         );
         const data = await response.json();
-
-        const parsedData = RequirementsResponseSchema.parse(data);
-        setSteps(parsedData.results);
+        setSteps(data.results);
       } catch (error) {
         console.error("Error fetching questions:", error);
       }
@@ -80,88 +84,90 @@ const QualityCheckQuestionnaire = () => {
     fetchQuestions();
   }, []);
 
-  const handleAnswer = async (questionId: number, value: boolean) => {
-    if (loading) return;
-
+  const handleAnswer = (questionId: string, value: boolean) => {
     setAnswers((prev) => ({
       ...prev,
       [questionId]: value,
     }));
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    if (currentQuestionIndex < steps[currentStep]?.questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    } else if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-      setCurrentQuestionIndex(0);
-      setSelected((prev) => ({ ...prev, [currentStep + 1]: null }));
-      setIsQuestionVisible(true);
+    if (currentQuestionIndex < steps[currentStep].questions.length - 1) {
+      setTimeout(() => {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      }, 300); // 300ms delay to allow for exit animation
     } else {
-      handleFinish();
+      setTimeout(() => {
+        handleNext();
+      }, 300); // 300ms delay to allow for exit animation
     }
   };
 
-  const handleSelection = async (stepId: number, value: "yes" | "no") => {
-    if (loading) return;
-
+  const handleSelection = (stepId: number, value: "yes" | "no") => {
     setSelected((prev) => ({ ...prev, [stepId]: value }));
     setCurrentQuestionIndex(0);
-    setIsQuestionVisible(false);
+    setIsQuestionVisible(false); // Hide the question
 
     if (value === "no") {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      if (currentStep === steps.length - 1) {
-        handleFinish();
-      } else {
-        handleNext();
-      }
+      setTimeout(() => {
+        if (currentStep === steps.length - 1) {
+          handleFinish();
+        } else {
+          handleNext();
+        }
+      }, 300);
     }
   };
 
   const canProceed = () => {
     const currentQuestions = steps[currentStep]?.questions || [];
-    const allAnswered = currentQuestions.every(
-      (q: { id: number }) => answers[q.id] !== undefined
-    );
-    return allAnswered;
+    // Check if we are on the last step
+    if (currentStep === steps.length - 1) {
+      // If on the last step, ensure all questions are answered
+      const allAnswered = currentQuestions.every(
+        (q: { id: number }) => answers[q.id] !== undefined
+      );
+      return allAnswered; // Only allow proceeding if all questions are answered
+    }
+    return true; // Allow proceeding if not on the last step
   };
 
   const handleNext = () => {
-    setIsQuestionVisible(true);
+    setIsQuestionVisible(true); // Reset question visibility
     if (selected[currentStep] === "yes" && !canProceed()) {
     } else {
       setError(null);
       if (currentStep < steps.length - 1) {
         setCurrentStep((prev) => prev + 1);
-        setCurrentQuestionIndex(0);
+        setCurrentQuestionIndex(0); // Reset the question index when moving to the next step
       }
     }
   };
 
   const handlePrevious = () => {
-    setIsQuestionVisible(true);
+    setIsQuestionVisible(true); // Reset question visibility
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
-      setCurrentQuestionIndex(0);
+      setCurrentQuestionIndex(0); // Reset the question index when going back
     }
   };
 
   const handleFinish = async () => {
-    setShowPopup(true);
+    setShowPopup(true); // Show the popup when the user finishes the questionnaire
   };
 
-  const onSubmit = async (formData: FormData) => {
+  const handleSubmitDetails = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     const payload = {
-      ...formData,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
       requirements: steps.map((step, index) => ({
         requirement_id: step.id,
         is_relevant: selected[index] === "yes",
-        answers: step.questions.map((question) => ({
-          question_id: question.id,
-          answer: answers[question.id] || false,
-        })),
+        answers: step.questions.map(
+          (question: { id: number; text: string }) => ({
+            question_id: question.id,
+            answer: answers[question.id] || false,
+          })
+        ),
       })),
     };
 
@@ -170,12 +176,16 @@ const QualityCheckQuestionnaire = () => {
         "https://cim.baliyoventures.com/api/koshi_quality_standard/calculate-points/",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         }
       );
 
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
 
       const data = await response.json();
       setTotalPoints(data.total_points);
@@ -189,35 +199,8 @@ const QualityCheckQuestionnaire = () => {
     }
   };
 
-  const resetAllStates = () => {
-    setCurrentStep(0);
-    setAnswers({});
-    setSelected({});
-    setError(null);
-    setShowThankYou(false);
-    setTotalPoints(0);
-    setFileUrl("");
-    setEarnedPoints(0);
-    setCurrentQuestionIndex(0);
-    setIsQuestionVisible(true);
-    setShowPopup(false);
-    setName("");
-    setEmail("");
-    setPhone("");
-  };
-
-  const handleCancel = () => {
-    resetAllStates();
-  };
-
   const handleClosePopup = () => {
-    resetAllStates();
-  };
-
-  const questionVariants = {
-    initial: { x: -20, opacity: 0 },
-    animate: { x: 0, opacity: 1, transition: { duration: 0.3 } },
-    exit: { x: 20, opacity: 0, transition: { duration: 0.2 } },
+    setShowThankYou(false);
   };
 
   return (
@@ -267,7 +250,7 @@ const QualityCheckQuestionnaire = () => {
             animate={{ scale: 1 }}
             className="space-y-6"
           >
-            {isQuestionVisible && (
+            {isQuestionVisible && ( // Conditional render for the question
               <div className="flex flex-col sm:flex-row sm:items-center items-center justify-center sm:justify-center mb-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-2 sm:mb-0">
                   Is
@@ -285,10 +268,8 @@ const QualityCheckQuestionnaire = () => {
                 {!selected[currentStep] ? (
                   <motion.div
                     key="selection-buttons"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
                     className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                   >
                     <motion.button
@@ -350,66 +331,64 @@ const QualityCheckQuestionnaire = () => {
                     </motion.button>
                   </motion.div>
                 ) : (
-                  <AnimatePresence mode="wait">
+                  <motion.div
+                    key="question-section"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="text-center p-4 sm:p-6"
+                  >
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
+                      {steps[currentStep]?.name}
+                    </h3>
                     {steps[currentStep]?.questions
                       .slice(currentQuestionIndex, currentQuestionIndex + 1)
-                      .map((question) => (
-                        <motion.div
-                          key={question.id}
-                          variants={questionVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          className="space-y-4"
-                        >
-                          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
-                            {steps[currentStep]?.name}
-                          </h3>
-                          <div className="flex flex-col min-h-[200px] sm:min-h-[150px] justify-between">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                              <p className="text-gray-800 font-medium text-sm sm:text-base flex-1">
-                                {question.text} ?
-                              </p>
-                              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs sm:text-sm whitespace-nowrap">
-                                {question.points} pts
-                              </span>
-                            </div>
-                            <div className="flex gap-4 mt-4">
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() =>
-                                  !loading && handleAnswer(question.id, true)
-                                }
-                                className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
-                                  answers[question.id] === true
-                                    ? "bg-green-500 text-white"
-                                    : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-green-50"
-                                }`}
-                                disabled={loading}
-                              >
-                                Yes
-                              </motion.button>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() =>
-                                  !loading && handleAnswer(question.id, false)
-                                }
-                                className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
-                                  answers[question.id] === false
-                                    ? "bg-red-500 text-white"
-                                    : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-red-50"
-                                }`}
-                                disabled={loading}
-                              >
-                                No
-                              </motion.button>
-                            </div>
+                      .map((question: any) => (
+                        <div key={question.id} className="space-y-4">
+                          <div className="flex flex-col sm:flex-row justify-center items-center sm:justify-between md:items-center sm:items-center mb-4">
+                            <p
+                              className="text-gray-800 font-medium text-sm sm:text-base mb-2 sm:mb-0"
+                              style={{ height: "50px" }}
+                            >
+                              {question.text} ?
+                            </p>
+                            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full items-center justify-center text-xs sm:text-sm">
+                              {question.points} pts
+                            </span>
                           </div>
-                        </motion.div>
+                          <div className="flex gap-4">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() =>
+                                handleAnswer(question.id.toString(), true)
+                              }
+                              className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
+                                answers[question.id] === true
+                                  ? "bg-green-500 text-white"
+                                  : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-green-50"
+                              }`}
+                            >
+                              Yes
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() =>
+                                handleAnswer(question.id.toString(), false)
+                              }
+                              className={`flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl text-sm font-medium transition-all ${
+                                answers[question.id] === false
+                                  ? "bg-red-500 text-white"
+                                  : "bg-white border-2 border-gray-200 text-gray-700 hover:bg-red-50"
+                              }`}
+                            >
+                              No
+                            </motion.button>
+                          </div>
+                        </div>
                       ))}
-                  </AnimatePresence>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
@@ -446,7 +425,7 @@ const QualityCheckQuestionnaire = () => {
                 onClick={handleFinish}
                 disabled={
                   loading || currentStep !== steps.length - 1 || !canProceed()
-                }
+                } // Disable button if loading
                 className={`w-full sm:w-auto sm:px-6 sm:py-3 px-4 py-2 rounded-xl sm:font-medium font-sm transition-all ${
                   currentStep === steps.length - 1 && canProceed() && !loading
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-200"
@@ -460,6 +439,7 @@ const QualityCheckQuestionnaire = () => {
         </Card>
       </div>
 
+      {/* Popup for name, email, and phone number */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <motion.div
@@ -468,69 +448,89 @@ const QualityCheckQuestionnaire = () => {
             className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto"
           >
             <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-              Complete Assessment
+              Complete
             </h2>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <input
-                  {...register("name")}
-                  type="text"
-                  placeholder="Your Name"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleSubmitDetails)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Your Name"
+                          className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-sm sm:text-base"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.name && (
-                  <span className="text-red-500 text-sm mt-1">
-                    {errors.name.message}
-                  </span>
-                )}
-              </div>
-              <div>
-                <input
-                  {...register("email")}
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Email Address"
+                          type="email"
+                          className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-sm sm:text-base"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.email && (
-                  <span className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </span>
-                )}
-              </div>
-              <div>
-                <input
-                  {...register("phone")}
-                  type="tel"
-                  placeholder="Phone Number"
-                  className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Phone Number"
+                          type="tel"
+                          className="w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-sm sm:text-base"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.phone && (
-                  <span className="text-red-500 text-sm mt-1">
-                    {errors.phone.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCancel}
-                  className="w-full sm:w-1/2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all"
-                >
-                  Cancel
-                </motion.button>
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={loading}
-                  className="w-full sm:w-1/2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium shadow-lg shadow-purple-200/50"
-                >
-                  {loading ? "Submitting..." : "Submit"}
-                </motion.button>
-              </div>
-            </form>
+
+                <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowPopup(false)}
+                    className="w-full sm:w-1/2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all text-sm sm:text-base"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={loading}
+                    className="w-full sm:w-1/2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium shadow-lg shadow-purple-200/50 text-sm sm:text-base"
+                  >
+                    {loading ? "Submitting..." : "Submit"}
+                  </motion.button>
+                </div>
+              </form>
+            </Form>
           </motion.div>
         </div>
       )}

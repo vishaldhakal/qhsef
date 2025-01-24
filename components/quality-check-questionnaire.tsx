@@ -494,6 +494,14 @@ const QualityCheckQuestionnaire = () => {
             <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               Complete
             </h2>
+            <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+              Thank You!
+            </h2>
+            <p className="text-gray-600 mt-4">
+              We truly appreciate your effort. You&apos;ve given your best, and
+              it means a lot to us. Thank you for your time and dedication!
+            </p>
 
             <Form {...form}>
               <form
